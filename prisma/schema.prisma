@@ -6,9 +6,54 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model Admin {
+  id         String   @id @default(uuid())
+  username   String
+  email      String
+  password   String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  @@map("admin")
+}
+
+model Post {
+  id        String     @id @default(uuid())
+  tags      String[]
+  status    PostStatus @default(PRIVATE)
+  imageUrl  String?
+  content   String     @db.Text
+  comments  Comment[]  @relation("PostComments")
+  likeCount Int
+
+  @@map("posts")
+}
+
+enum PostStatus {
+  PRIVATE
+  UNLISTED
+  PUBLIC
+}
+
+model Comment {
+  id       String        @id @default(uuid())
+  content  String        @db.Text
+  imageUrl String?
+  status   CommentStatus @default(PUBLIC)
+  parent   Comment?      @relation("replies", fields: [id], references: [id])
+  comments Comment[]     @relation("replies")
+  post     Post?         @relation("PostComments", fields: [postId], references: [id])
+  postId   String?
+}
+
+enum CommentStatus {
+  PUBLIC
+  BANNED
 }
